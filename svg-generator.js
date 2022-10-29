@@ -1,7 +1,8 @@
 // @ts-check
-var SVGSpriter = require('svg-sprite');
-var fs = require('fs/promises');
+const fsPromise = require('fs/promises');
 const path = require('path');
+const SVGSpriter = require('svg-sprite');
+const open = require('open');
 
 const pathToIcons = './icons/';
 const dest = './dist/';
@@ -20,7 +21,7 @@ const svgTransform = /** @type {any} */ ({
 });
 
 /** @type {SVGSpriter.Config} */
-var config = {
+const config = {
     dest: dest, // Main output directory
     log: 'verbose', // Logging verbosity (default: no logging)
     shape: {
@@ -75,7 +76,7 @@ var config = {
  * @param {string} iconDirPath
  */
 async function readFileContent(item, iconDirPath) {
-    let fileContent = await fs.readFile(iconDirPath + item, {
+    let fileContent = await fsPromise.readFile(iconDirPath + item, {
         encoding: 'utf-8',
     });
     const rectStart = fileContent.search('<rect');
@@ -117,7 +118,7 @@ async function readFileContentsAndAddToSpriter(items, spriter, iconDirPath) {
 async function main() {
     let items = [];
     try {
-        items = await fs.readdir(pathToIcons);
+        items = await fsPromise.readdir(pathToIcons);
     } catch (e) {
         console.error('Error reading dir', e);
     }
@@ -125,18 +126,18 @@ async function main() {
     const spriter = new SVGSpriter(config);
     await readFileContentsAndAddToSpriter(items, spriter, pathToIcons);
 
-    spriter.compile((error, result) => {
+    spriter.compile(async (error, result) => {
         if (error) {
             console.error(error);
             return;
         }
         /* Write `result` files to disk (or do whatever with them ...) */
-        for (var mode in result) {
-            for (var resource in result[mode]) {
+        for (const mode in result) {
+            for (const resource in result[mode]) {
                 // mkdirp.sync(path.dirname(result[mode][resource].path));
 
                 try {
-                    fs.writeFile(
+                    await fsPromise.writeFile(
                         result[mode][resource].path,
                         result[mode][resource].contents
                     );
@@ -146,7 +147,7 @@ async function main() {
                 }
 
                 try {
-                    fs.writeFile(
+                    await fsPromise.writeFile(
                         dest + 'svg-sprite.html',
                         result[mode][resource].contents
                     );
@@ -164,7 +165,10 @@ async function main() {
                             .map((i) => path.parse(i).name),
                         result[mode][resource].contents
                     );
-                    fs.writeFile(dest + 'preview.html', previewFileContents);
+                    await fsPromise.writeFile(
+                        dest + 'preview.html',
+                        previewFileContents
+                    );
                     console.info(
                         `Successfully written preview file to ${dest}.`
                     );
