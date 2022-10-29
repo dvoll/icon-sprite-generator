@@ -172,6 +172,7 @@ async function main() {
                     console.info(
                         `Successfully written preview file to ${dest}.`
                     );
+                    open(dest + 'preview.html');
                 } catch (e) {
                     console.error('Error writing preview file.');
                 }

@@ -7,6 +7,7 @@
         "node": ">=14.17.14"
     },
     "dependencies": {
+        "open": "^8.4.0",
         "svg-sprite": "^2.0.0"
     },
     "scripts": {
