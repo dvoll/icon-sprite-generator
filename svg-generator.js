@@ -88,16 +88,11 @@ async function readFileContent(item, iconDirPath) {
 
 /**
  *
+ * @param {string[]} items
  * @param {SVGSpriter.SVGSpriter} spriter
  * @param {string} iconDirPath
  */
-async function readFilesAndAddToSpriter(spriter, iconDirPath) {
-    let items = [];
-    try {
-        items = await fs.readdir(iconDirPath);
-    } catch (e) {
-        console.error('Error reading dir', e);
-    }
+async function readFileContentsAndAddToSpriter(items, spriter, iconDirPath) {
     return Promise.all(
         items.map(async (item) => {
             const fileExt = path.extname(item);
@@ -120,8 +115,15 @@ async function readFilesAndAddToSpriter(spriter, iconDirPath) {
 }
 
 async function main() {
+    let items = [];
+    try {
+        items = await fs.readdir(pathToIcons);
+    } catch (e) {
+        console.error('Error reading dir', e);
+    }
+
     const spriter = new SVGSpriter(config);
-    await readFilesAndAddToSpriter(spriter, pathToIcons);
+    await readFileContentsAndAddToSpriter(items, spriter, pathToIcons);
 
     spriter.compile((error, result) => {
         if (error) {
@@ -132,6 +134,7 @@ async function main() {
         for (var mode in result) {
             for (var resource in result[mode]) {
                 // mkdirp.sync(path.dirname(result[mode][resource].path));
+
                 try {
                     fs.writeFile(
                         result[mode][resource].path,
@@ -141,6 +144,7 @@ async function main() {
                 } catch (e) {
                     console.error('Error writing svg sprite.');
                 }
+
                 try {
                     fs.writeFile(
                         dest + 'svg-sprite.html',
@@ -152,9 +156,59 @@ async function main() {
                 } catch (e) {
                     console.error('Error writing svg sprite html file.');
                 }
+
+                try {
+                    const previewFileContents = generatePreviewFileContents(
+                        items
+                            .filter((i) => path.extname(i) === '.svg')
+                            .map((i) => path.parse(i).name),
+                        result[mode][resource].contents
+                    );
+                    fs.writeFile(dest + 'preview.html', previewFileContents);
+                    console.info(
+                        `Successfully written preview file to ${dest}.`
+                    );
+                } catch (e) {
+                    console.error('Error writing preview file.');
+                }
             }
         }
     });
 }
 
 main();
+
+/**
+ *
+ * @param {string[]} items
+ * @param {string} contents
+ * @returns {string}
+ */
+function generatePreviewFileContents(items, contents) {
+    const htmlStart =
+        '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Icon Test</title></head><body><table><thead><tr><th>Name</th><th colspan="2">Icon</th><tr></thead><tbody>';
+    const htmlEnd = '</tbody></table></body></html>';
+
+    const svgPreviews = items.map(
+        (item) => `
+<tr>
+    <td>
+        ${item}
+    </td>
+    <td style="padding-left: 1rem;">
+        <svg style="height: 32px; width: auto;" class="icon" viewBox="0 0 32 32">
+            <use xlink:href="#${item}" />
+        </svg>
+    </td>
+    <td style="padding-left: 1rem;">
+        <svg style="height: 32px; width: auto; fill: red;" class="icon" viewBox="0 0 32 32">
+            <use xlink:href="#${item}" />
+        </svg>
+    </td>
+</tr>
+    `,
+        ''
+    );
+
+    return htmlStart + svgPreviews.join('') + contents + htmlEnd;
+}
