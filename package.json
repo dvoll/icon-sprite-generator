@@ -1,0 +1,22 @@
+{
+    "name": "sprite-generator",
+    "version": "1.0.1",
+    "description": "",
+    "main": "svg-generator.js",
+    "engines": {
+        "node": ">=14.17.14"
+    },
+    "dependencies": {
+        "svg-sprite": "^2.0.0"
+    },
+    "scripts": {
+        "start": "node svg-generator.js"
+    },
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "@types/svg-sprite": "^0.0.33",
+        "eslint": "^8.26.0",
+        "eslint-plugin-n": "^15.3.0"
+    }
+}
