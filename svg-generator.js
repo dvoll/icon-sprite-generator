@@ -1,6 +1,7 @@
 // @ts-check
 var SVGSpriter = require('svg-sprite');
-var fs = require('fs');
+var fs = require('fs/promises');
+const path = require('path');
 
 const pathToIcons = './icons/';
 const dest = './dist/';
@@ -69,25 +70,59 @@ var config = {
     },
 };
 
-var spriter = new SVGSpriter(config); //new SVGSpriter(config);
-
-// const dir = "./src/assets/svg/";
-fs.readdir(pathToIcons, (err, items) => {
-    if (err) {
-        console.log(err);
-        return;
-    }
-    items.forEach((item) => {
-        let fileContent = fs.readFileSync(pathToIcons + item, {
-            encoding: 'utf-8',
-        });
-        const rectStart = fileContent.search('<rect');
-        const rectEnd = fileContent.search('/>');
-        const s1 = fileContent.slice(0, rectStart);
-        const s2 = fileContent.slice(rectEnd + 2);
-        fileContent = s1 + s2;
-        spriter.add(pathToIcons + item, item, fileContent);
+/**
+ * @param {string} item
+ * @param {string} iconDirPath
+ */
+async function readFileContent(item, iconDirPath) {
+    let fileContent = await fs.readFile(iconDirPath + item, {
+        encoding: 'utf-8',
     });
+    const rectStart = fileContent.search('<rect');
+    const rectEnd = fileContent.search('/>');
+    const s1 = fileContent.slice(0, rectStart);
+    const s2 = fileContent.slice(rectEnd + 2);
+    fileContent = s1 + s2;
+    return fileContent;
+}
+
+/**
+ *
+ * @param {SVGSpriter.SVGSpriter} spriter
+ * @param {string} iconDirPath
+ */
+async function readFilesAndAddToSpriter(spriter, iconDirPath) {
+    let items = [];
+    try {
+        items = await fs.readdir(iconDirPath);
+    } catch (e) {
+        console.error('Error reading dir', e);
+    }
+    return Promise.all(
+        items.map(async (item) => {
+            const fileExt = path.extname(item);
+            if (fileExt === '.svg') {
+                try {
+                    const fileContent = await readFileContent(
+                        item,
+                        iconDirPath
+                    );
+                    spriter.add(iconDirPath + item, item, fileContent);
+                } catch (e) {
+                    console.error(
+                        `Error while reading contents of ${item}.`,
+                        e
+                    );
+                }
+            }
+        })
+    );
+}
+
+async function main() {
+    const spriter = new SVGSpriter(config);
+    await readFilesAndAddToSpriter(spriter, pathToIcons);
+
     spriter.compile((error, result) => {
         if (error) {
             console.error(error);
@@ -97,26 +132,29 @@ fs.readdir(pathToIcons, (err, items) => {
         for (var mode in result) {
             for (var resource in result[mode]) {
                 // mkdirp.sync(path.dirname(result[mode][resource].path));
-                fs.writeFileSync(
-                    result[mode][resource].path,
-                    result[mode][resource].contents
-                );
-                fs.writeFileSync(
-                    dest + 'svg-sprite.html',
-                    result[mode][resource].contents
-                );
+                try {
+                    fs.writeFile(
+                        result[mode][resource].path,
+                        result[mode][resource].contents
+                    );
+                    console.info(`Successfully written svg sprite to ${dest}.`);
+                } catch (e) {
+                    console.error('Error writing svg sprite.');
+                }
+                try {
+                    fs.writeFile(
+                        dest + 'svg-sprite.html',
+                        result[mode][resource].contents
+                    );
+                    console.info(
+                        `Successfully written svg sprite html file to ${dest}.`
+                    );
+                } catch (e) {
+                    console.error('Error writing svg sprite html file.');
+                }
             }
         }
     });
-});
-// Add SVG source files — the manual way ...
-// spriter.add(
-//   "./src/assets/svg/cloud1.svg",
-//   null,
-//   fs.readFileSync("./src/assets/svg/cloud1.svg", { encoding: "utf-8" })
-// );
-// var path2 = "./src/assets/svg/cloud2.svg";
-// spriter.add(path2, null, fs.readFileSync(path2, { encoding: "utf-8" }));
-/* ... */
+}
 
-// Compile the sprite
+main();
