@@ -142,6 +142,12 @@ async function main() {
                         result[mode][resource].contents
                     );
                     console.info(`Successfully written svg sprite to ${dest}.`);
+                    const stats = await fsPromise.stat(
+                        result[mode][resource].path
+                    );
+                    const fileSizeInBytes = stats.size;
+                    const fileSizeInMegabytes = fileSizeInBytes / 1024;
+                    console.info(`File size is: ${fileSizeInMegabytes} kb.`);
                 } catch (e) {
                     console.error('Error writing svg sprite.');
                 }
