@@ -1,0 +1,26 @@
+{"skeleton":{"images":""},
+"bones":[{"name":"root"}],
+"slots":[
+	{"name":"heart","bone":"root","attachment":"heart"},
+	{"name":"arrow-right","bone":"root","attachment":"arrow-right"},
+	{"name":"printer","bone":"root","attachment":"printer"},
+	{"name":"share","bone":"root","attachment":"share"},
+	{"name":"clock","bone":"root","attachment":"clock"},
+	{"name":"location","bone":"root","attachment":"location"},
+	{"name":"arrow-left","bone":"root","attachment":"arrow-left"},
+	{"name":"external","bone":"root","attachment":"external"}
+],
+"skins":{
+	"default":{
+		"heart":{"heart":{"x":,"y":,"width":,"height":}},
+		"arrow-right":{"arrow-right":{"x":,"y":,"width":,"height":}},
+		"printer":{"printer":{"x":,"y":,"width":,"height":}},
+		"share":{"share":{"x":,"y":,"width":,"height":}},
+		"clock":{"clock":{"x":,"y":,"width":,"height":}},
+		"location":{"location":{"x":,"y":,"width":,"height":}},
+		"arrow-left":{"arrow-left":{"x":,"y":,"width":,"height":}},
+		"external":{"external":{"x":,"y":,"width":,"height":}}
+	}
+},
+"animations":{"animation":{}}
+}
